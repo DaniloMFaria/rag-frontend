@@ -1,0 +1,41 @@
+{
+  "name": "RAG Frontend",
+  "version": "1.0.0",
+  "description": "Frontend moderno para consulta do sistema RAG",
+  "author": "Danilo M. Faria",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DaniloMFaria/rag-frontend.git"
+  },
+  "homepage": "https://danilomfaria.github.io/rag-frontend",
+  "keywords": [
+    "rag",
+    "frontend",
+    "ai",
+    "openai",
+    "github-pages"
+  ],
+  "api": {
+    "backend_url": "http://147.93.8.153:8000",
+    "endpoints": {
+      "health": "/health",
+      "query": "/query"
+    }
+  },
+  "features": [
+    "Real-time API status",
+    "Query history",
+    "Responsive design",
+    "Copy/share responses",
+    "Error handling",
+    "LocalStorage persistence"
+  ],
+  "technologies": [
+    "HTML5",
+    "CSS3",
+    "Vanilla JavaScript",
+    "Fetch API",
+    "LocalStorage",
+    "Font Awesome"
+  ]
+}
