@@ -1,8 +1,8 @@
 // Configurações da API
 const API_CONFIG = {
-    // Tenta HTTPS primeiro, depois HTTP como fallback
-    BASE_URL: 'http://147.93.8.153:8000',
-    BASE_URL_HTTPS: 'https://147.93.8.153:8000',
+    // Usar HTTP na porta 8080 via proxy Nginx (sem SSL por enquanto)
+    BASE_URL: 'http://147.93.8.153:8080',
+    BASE_URL_FALLBACK: 'http://147.93.8.153:8000',
     ENDPOINTS: {
         HEALTH: '/health',
         QUERY: '/query'
