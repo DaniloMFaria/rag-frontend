@@ -171,7 +171,10 @@ async function consultarRAG() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ question: pergunta }),
+            body: JSON.stringify({ 
+                query: pergunta,
+                global_search: true
+            }),
             signal: controller.signal
         });
         
@@ -188,8 +191,9 @@ async function consultarRAG() {
         // Mostrar resposta
         mostrarResposta(data, pergunta, responseTime);
         
-        // Adicionar ao histórico
-        adicionarAoHistorico(pergunta, data.answer, responseTime);
+        // Adicionar ao histórico  
+        const answer = processarRespostaAPI(data);
+        adicionarAoHistorico(pergunta, answer, responseTime);
         
         console.log('✅ Consulta realizada com sucesso em', responseTime + 'ms');
         
@@ -258,7 +262,8 @@ function mostrarResposta(data, pergunta, responseTime) {
     `;
     
     // Conteúdo da resposta
-    respostaDiv.innerHTML = formatarResposta(data.answer);
+    const answer = processarRespostaAPI(data);
+    respostaDiv.innerHTML = formatarResposta(answer);
     
     // Mostrar seção
     responseSection.style.display = 'block';
@@ -267,7 +272,7 @@ function mostrarResposta(data, pergunta, responseTime) {
     // Salvar resposta atual para ações
     window.currentResponse = {
         question: pergunta,
-        answer: data.answer,
+        answer: answer,
         timestamp: now.toISOString(),
         responseTime
     };
@@ -296,6 +301,35 @@ function mostrarErro(errorMessage) {
     
     responseSection.style.display = 'block';
     responseSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Processar resposta da API RAG
+function processarRespostaAPI(data) {
+    // Verificar se a resposta tem sucesso
+    if (!data.success || !data.results || data.results.length === 0) {
+        return "Não foram encontrados resultados relevantes para sua consulta.";
+    }
+    
+    // Construir resposta formatada com base nos resultados
+    let resposta = `**Encontrei ${data.total_results} resultado(s) relevante(s):**\n\n`;
+    
+    data.results.forEach((resultado, index) => {
+        resposta += `**${index + 1}.** ${resultado.content}\n\n`;
+        
+        // Adicionar metadados se disponíveis
+        if (resultado.metadata) {
+            const meta = resultado.metadata;
+            resposta += `*Fonte: ${meta.empresa || 'N/A'} - ${meta.departamento || 'N/A'}`;
+            if (meta.arquivo_original) {
+                resposta += ` (${meta.arquivo_original})`;
+            }
+            resposta += `*\n\n`;
+        }
+    });
+    
+    resposta += `---\n*Busca realizada: ${data.search_type === 'global' ? 'Global' : 'Específica'}*`;
+    
+    return resposta;
 }
 
 // Formatar resposta (markdown básico)
