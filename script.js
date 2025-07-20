@@ -1,6 +1,8 @@
 // Configurações da API
 const API_CONFIG = {
+    // Tenta HTTPS primeiro, depois HTTP como fallback
     BASE_URL: 'http://147.93.8.153:8000',
+    BASE_URL_HTTPS: 'https://147.93.8.153:8000',
     ENDPOINTS: {
         HEALTH: '/health',
         QUERY: '/query'
@@ -74,11 +76,27 @@ async function verificarConexao() {
     const statusIndicator = document.getElementById('status-indicator');
     const statusIcon = document.getElementById('status-icon');
     const statusText = document.getElementById('status-text');
+    const mixedContentWarning = document.getElementById('mixed-content-warning');
     
     // Estado de verificação
     statusIndicator.className = 'status-indicator status-checking';
     statusIcon.className = 'fas fa-circle';
     statusText.textContent = 'Verificando conexão...';
+    mixedContentWarning.style.display = 'none';
+    
+    // Detectar se estamos em HTTPS (GitHub Pages)
+    const isHTTPS = window.location.protocol === 'https:';
+    
+    if (isHTTPS) {
+        // Em HTTPS, não podemos fazer requisições HTTP diretas
+        statusIndicator.className = 'status-indicator status-offline';
+        statusIcon.className = 'fas fa-exclamation-triangle';
+        statusText.textContent = 'Mixed Content - HTTPS → HTTP bloqueado';
+        mixedContentWarning.style.display = 'block';
+        
+        console.warn('⚠️ Mixed Content: HTTPS não pode acessar HTTP. Use http://localhost para desenvolvimento.');
+        return;
+    }
     
     try {
         const controller = new AbortController();
@@ -120,7 +138,7 @@ async function verificarConexao() {
         if (error.name === 'AbortError') {
             statusText.textContent = 'Timeout - API não responde';
         } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
-            statusText.textContent = 'Erro de rede - Verifique CORS';
+            statusText.textContent = 'Erro de rede - Mixed Content ou CORS';
         }
     }
 }

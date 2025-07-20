@@ -155,6 +155,61 @@ body {
     font-family: 'Courier New', monospace;
 }
 
+/* Mixed Content Warning */
+.mixed-content-warning {
+    background: linear-gradient(135deg, #fff3cd, #fff8dc);
+    border: 2px solid var(--warning-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-light);
+}
+
+.warning-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.warning-content i {
+    color: var(--warning-color);
+    font-size: 1.5rem;
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+}
+
+.warning-text {
+    flex: 1;
+}
+
+.warning-text strong {
+    color: #856404;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.warning-text p {
+    margin-bottom: 0.75rem;
+    color: #856404;
+}
+
+.warning-text ul {
+    margin: 0.5rem 0 0 1.5rem;
+    color: #856404;
+}
+
+.warning-text li {
+    margin-bottom: 0.25rem;
+}
+
+.warning-text code {
+    background: rgba(133, 100, 4, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+}
+
 /* Query Section */
 .query-section {
     background: var(--bg-card);
