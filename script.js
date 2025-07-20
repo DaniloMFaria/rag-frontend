@@ -1,8 +1,8 @@
 // Configurações da API
 const API_CONFIG = {
-    // Usar HTTP na porta 8080 via proxy Nginx (sem SSL por enquanto)
-    BASE_URL: 'http://147.93.8.153:8080',
-    BASE_URL_FALLBACK: 'http://147.93.8.153:8000',
+    // Usar HTTPS na porta 8443 (porta 443 ocupada pelo Easypanel)
+    BASE_URL: 'https://147.93.8.153:8443',
+    BASE_URL_FALLBACK: 'http://147.93.8.153:8080',
     ENDPOINTS: {
         HEALTH: '/health',
         QUERY: '/query'
@@ -87,7 +87,7 @@ async function verificarConexao() {
     // Detectar se estamos em HTTPS (GitHub Pages)
     const isHTTPS = window.location.protocol === 'https:';
     
-    if (isHTTPS) {
+    if (isHTTPS && API_CONFIG.BASE_URL.startsWith('http://')) {
         // Em HTTPS, não podemos fazer requisições HTTP diretas
         statusIndicator.className = 'status-indicator status-offline';
         statusIcon.className = 'fas fa-exclamation-triangle';
