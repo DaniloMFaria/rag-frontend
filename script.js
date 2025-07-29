@@ -2,7 +2,7 @@
 const API_CONFIG = {
     // Usar HTTPS na porta 8443 (porta 443 ocupada pelo Easypanel)
     BASE_URL: 'https://147.93.8.153:8443',
-    BASE_URL_FALLBACK: 'http://147.93.8.153:8080',
+    BASE_URL_FALLBACK: 'http://147.93.8.153:8000',
     ENDPOINTS: {
         HEALTH: '/health',
         QUERY: '/query'
