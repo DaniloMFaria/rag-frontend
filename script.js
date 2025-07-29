@@ -82,6 +82,12 @@ async function verificarConexao() {
     const statusText = document.getElementById('status-text');
     const mixedContentWarning = document.getElementById('mixed-content-warning');
     
+    // Verificar se os elementos existem
+    if (!statusIndicator || !statusIcon || !statusText) {
+        console.error('❌ Elementos DOM não encontrados!');
+        return;
+    }
+    
     // Estado de verificação
     statusIndicator.className = 'status-indicator status-checking';
     statusIcon.className = 'fas fa-circle';
