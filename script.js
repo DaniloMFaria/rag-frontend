@@ -1,8 +1,8 @@
 // Configurações da API
 const API_CONFIG = {
-    // Usar HTTPS na porta 8443 (porta 443 ocupada pelo Easypanel)
-    BASE_URL: 'https://147.93.8.153:8443',
-    BASE_URL_FALLBACK: 'http://147.93.8.153:8000',
+    // URL com domínio e SSL válido via Cloudflare
+    BASE_URL: 'https://rag.grkr.com.br:8443',
+    BASE_URL_FALLBACK: 'https://147.93.8.153:8443',
     ENDPOINTS: {
         HEALTH: '/health',
         QUERY: '/query'
@@ -99,34 +99,73 @@ async function verificarConexao() {
     }
     
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        let currentUrl = API_CONFIG.BASE_URL;
+        let controller = new AbortController();
+        let timeoutId = setTimeout(() => controller.abort(), 5000);
         
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.HEALTH}`, {
-            method: 'GET',
-            signal: controller.signal,
-            headers: {
-                'Content-Type': 'application/json'
+        try {
+            const response = await fetch(`${currentUrl}${API_CONFIG.ENDPOINTS.HEALTH}`, {
+                method: 'GET',
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Status online
+                appState.isConnected = true;
+                statusIndicator.className = 'status-indicator status-online';
+                statusIcon.className = 'fas fa-circle';
+                statusText.textContent = `Conectado - ${currentUrl.includes('grkr.com.br') ? 'Domínio' : 'IP direto'}`;
+                
+                console.log('✅ API conectada:', data);
+                return;
+            } else {
+                throw new Error(`HTTP ${response.status}`);
             }
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-            const data = await response.json();
+        } catch (primaryError) {
+            console.warn('⚠️ Falha na URL primária, tentando fallback...', primaryError);
             
-            // Status online
-            appState.isConnected = true;
-            statusIndicator.className = 'status-indicator status-online';
-            statusIcon.className = 'fas fa-circle';
-            statusText.textContent = 'Conectado - API Online';
+            // Tentar URL de fallback
+            currentUrl = API_CONFIG.BASE_URL_FALLBACK;
+            controller = new AbortController();
+            timeoutId = setTimeout(() => controller.abort(), 5000);
             
-            console.log('✅ API conectada:', data);
-        } else {
-            throw new Error(`HTTP ${response.status}`);
+            const fallbackResponse = await fetch(`${currentUrl}${API_CONFIG.ENDPOINTS.HEALTH}`, {
+                method: 'GET',
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (fallbackResponse.ok) {
+                const data = await fallbackResponse.json();
+                
+                // Atualizar URL base para usar o fallback
+                API_CONFIG.BASE_URL = currentUrl;
+                
+                // Status online com fallback
+                appState.isConnected = true;
+                statusIndicator.className = 'status-indicator status-online';
+                statusIcon.className = 'fas fa-circle';
+                statusText.textContent = 'Conectado - IP direto (fallback)';
+                
+                console.log('✅ API conectada via fallback:', data);
+                return;
+            } else {
+                throw new Error(`Fallback também falhou: HTTP ${fallbackResponse.status}`);
+            }
         }
     } catch (error) {
-        console.error('❌ Erro de conexão:', error);
+        console.error('❌ Erro de conexão em ambas URLs:', error);
         
         // Status offline
         appState.isConnected = false;
