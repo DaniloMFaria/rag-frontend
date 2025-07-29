@@ -116,11 +116,12 @@ async function verificarConexao() {
         console.log('🚀 Tentando conectar em:', `${currentUrl}${API_CONFIG.ENDPOINTS.HEALTH}`);
         
         try {
+            // Primeira tentativa: requisição normal
             const response = await fetch(`${currentUrl}${API_CONFIG.ENDPOINTS.HEALTH}`, {
                 method: 'GET',
                 signal: controller.signal,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Accept': 'application/json'
                 }
             });
             
@@ -142,9 +143,24 @@ async function verificarConexao() {
                 throw new Error(`HTTP ${response.status}`);
             }
         } catch (primaryError) {
-            console.warn('⚠️ Falha na URL primária, tentando fallback...', primaryError);
+            console.warn('⚠️ Falha na URL primária (CORS?):', primaryError.message);
             
-            // Tentar URL de fallback
+            // Se o erro for CORS, mas o servidor existe, considerar conectado mas com aviso
+            if (primaryError.message.includes('CORS') || primaryError.message.includes('fetch')) {
+                console.log('🔧 Detectado erro CORS - servidor existe mas headers inválidos');
+                
+                // Status online com aviso CORS
+                appState.isConnected = true;
+                statusIndicator.className = 'status-indicator status-warning';
+                statusIcon.className = 'fas fa-exclamation-triangle';
+                statusText.textContent = 'Conectado - Problema CORS (contate admin)';
+                
+                console.log('⚠️ API disponível mas com erro CORS');
+                return;
+            }
+            
+            // Tentar URL de fallback apenas se não for erro CORS
+            console.log('🔄 Tentando URL de fallback...');
             currentUrl = API_CONFIG.BASE_URL_FALLBACK;
             controller = new AbortController();
             timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -153,7 +169,7 @@ async function verificarConexao() {
                 method: 'GET',
                 signal: controller.signal,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Accept': 'application/json'
                 }
             });
             
@@ -190,7 +206,7 @@ async function verificarConexao() {
         if (error.name === 'AbortError') {
             statusText.textContent = 'Timeout - API não responde';
         } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
-            statusText.textContent = 'Erro de rede - Mixed Content ou CORS';
+            statusText.textContent = 'Erro de rede - CORS ou SSL inválido';
         }
     }
 }

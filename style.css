@@ -139,6 +139,7 @@ body {
 .status-online { color: var(--success-color); }
 .status-offline { color: var(--error-color); }
 .status-checking { color: var(--warning-color); }
+.status-warning { color: var(--warning-color); }
 
 .api-info {
     display: flex;
