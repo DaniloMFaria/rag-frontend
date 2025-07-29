@@ -116,13 +116,12 @@ async function verificarConexao() {
         console.log('🚀 Tentando conectar em:', `${currentUrl}${API_CONFIG.ENDPOINTS.HEALTH}`);
         
         try {
-            // Primeira tentativa: requisição normal
+            // Para Chrome: tentar sem headers extras primeiro
             const response = await fetch(`${currentUrl}${API_CONFIG.ENDPOINTS.HEALTH}`, {
                 method: 'GET',
                 signal: controller.signal,
-                headers: {
-                    'Accept': 'application/json'
-                }
+                mode: 'cors',
+                credentials: 'omit'
             });
             
             console.log('📡 Resposta recebida:', response.status, response.statusText);
@@ -143,19 +142,60 @@ async function verificarConexao() {
                 throw new Error(`HTTP ${response.status}`);
             }
         } catch (primaryError) {
-            console.warn('⚠️ Falha na URL primária (CORS?):', primaryError.message);
+            console.warn('⚠️ Falha na URL primária:', primaryError.message);
             
-            // Se o erro for CORS, mas o servidor existe, considerar conectado mas com aviso
-            if (primaryError.message.includes('CORS') || primaryError.message.includes('fetch')) {
-                console.log('🔧 Detectado erro CORS - servidor existe mas headers inválidos');
+            // Detecção mais específica de erro CORS para Chrome vs Safari
+            const isCorsError = primaryError.message.includes('CORS') || 
+                               primaryError.message.includes('fetch') ||
+                               primaryError.message.includes('Network') ||
+                               primaryError.name === 'TypeError';
+            
+            // Chrome: Detectar USER_AGENT para comportamento específico
+            const isChrome = navigator.userAgent.includes('Chrome') && !navigator.userAgent.includes('Safari');
+            const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome');
+            
+            if (isCorsError) {
+                console.log(`🔧 Erro CORS detectado (${isChrome ? 'Chrome' : isSafari ? 'Safari' : 'Outro'})`);
                 
-                // Status online com aviso CORS
-                appState.isConnected = true;
+                // Para Chrome, tentar determinar se POST ainda funciona
+                if (isChrome) {
+                    try {
+                        console.log('🧪 Testando se POST funciona apesar do erro CORS no GET...');
+                        const testController = new AbortController();
+                        const testTimeout = setTimeout(() => testController.abort(), 3000);
+                        
+                        const testResponse = await fetch(`${currentUrl}${API_CONFIG.ENDPOINTS.QUERY}`, {
+                            method: 'POST',
+                            mode: 'cors',
+                            credentials: 'omit',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query: 'test', global_search: true }),
+                            signal: testController.signal
+                        });
+                        
+                        clearTimeout(testTimeout);
+                        
+                        if (testResponse.status === 200 || testResponse.status === 422) {
+                            // POST funciona (422 é esperado para query vazia)
+                            appState.isConnected = true;
+                            statusIndicator.className = 'status-indicator status-warning';
+                            statusIcon.className = 'fas fa-exclamation-triangle';
+                            statusText.textContent = 'Conectado - GET bloqueado, POST OK (Chrome)';
+                            console.log('✅ POST funciona apesar do erro CORS no GET');
+                            return;
+                        }
+                    } catch (testError) {
+                        console.log('❌ POST também falhou:', testError.message);
+                    }
+                }
+                
+                // Status geral de aviso CORS
+                appState.isConnected = false; // Marcar como desconectado se nem POST funciona
                 statusIndicator.className = 'status-indicator status-warning';
                 statusIcon.className = 'fas fa-exclamation-triangle';
-                statusText.textContent = 'Conectado - Problema CORS (contate admin)';
+                statusText.textContent = `CORS bloqueado - Tente Safari ou contate admin`;
                 
-                console.log('⚠️ API disponível mas com erro CORS');
+                console.log('⚠️ API disponível mas completamente bloqueada por CORS');
                 return;
             }
             
@@ -168,9 +208,8 @@ async function verificarConexao() {
             const fallbackResponse = await fetch(`${currentUrl}${API_CONFIG.ENDPOINTS.HEALTH}`, {
                 method: 'GET',
                 signal: controller.signal,
-                headers: {
-                    'Accept': 'application/json'
-                }
+                mode: 'cors',
+                credentials: 'omit'
             });
             
             clearTimeout(timeoutId);
@@ -236,6 +275,8 @@ async function consultarRAG() {
         
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.QUERY}`, {
             method: 'POST',
+            mode: 'cors',
+            credentials: 'omit',
             headers: {
                 'Content-Type': 'application/json'
             },
