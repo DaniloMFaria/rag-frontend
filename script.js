@@ -81,6 +81,7 @@ async function verificarConexao() {
     const statusIcon = document.getElementById('status-icon');
     const statusText = document.getElementById('status-text');
     const mixedContentWarning = document.getElementById('mixed-content-warning');
+    const corsWarning = document.getElementById('cors-warning');
     
     // Verificar se os elementos existem
     if (!statusIndicator || !statusIcon || !statusText) {
@@ -93,6 +94,7 @@ async function verificarConexao() {
     statusIcon.className = 'fas fa-circle';
     statusText.textContent = 'Verificando conexão...';
     mixedContentWarning.style.display = 'none';
+    if (corsWarning) corsWarning.style.display = 'none';
     
     // Detectar se estamos em HTTPS (GitHub Pages)
     const isHTTPS = window.location.protocol === 'https:';
@@ -194,6 +196,11 @@ async function verificarConexao() {
                 statusIndicator.className = 'status-indicator status-warning';
                 statusIcon.className = 'fas fa-exclamation-triangle';
                 statusText.textContent = `CORS bloqueado - Tente Safari ou contate admin`;
+                
+                // Mostrar aviso CORS específico
+                if (corsWarning) {
+                    corsWarning.style.display = 'block';
+                }
                 
                 console.log('⚠️ API disponível mas completamente bloqueada por CORS');
                 return;

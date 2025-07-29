@@ -166,6 +166,15 @@ body {
     box-shadow: var(--shadow-light);
 }
 
+.cors-warning {
+    background: linear-gradient(135deg, #f8d7da, #ffe6e6);
+    border: 2px solid var(--error-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-light);
+}
+
 .warning-content {
     display: flex;
     align-items: flex-start;
