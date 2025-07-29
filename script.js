@@ -73,6 +73,10 @@ function configurarEventListeners() {
 
 // Verificar conexão com a API
 async function verificarConexao() {
+    console.log('🔍 Iniciando verificação de conexão...');
+    console.log('📍 BASE_URL:', API_CONFIG.BASE_URL);
+    console.log('🌐 Protocolo atual:', window.location.protocol);
+    
     const statusIndicator = document.getElementById('status-indicator');
     const statusIcon = document.getElementById('status-icon');
     const statusText = document.getElementById('status-text');
@@ -103,6 +107,8 @@ async function verificarConexao() {
         let controller = new AbortController();
         let timeoutId = setTimeout(() => controller.abort(), 5000);
         
+        console.log('🚀 Tentando conectar em:', `${currentUrl}${API_CONFIG.ENDPOINTS.HEALTH}`);
+        
         try {
             const response = await fetch(`${currentUrl}${API_CONFIG.ENDPOINTS.HEALTH}`, {
                 method: 'GET',
@@ -112,6 +118,7 @@ async function verificarConexao() {
                 }
             });
             
+            console.log('📡 Resposta recebida:', response.status, response.statusText);
             clearTimeout(timeoutId);
             
             if (response.ok) {
